@@ -35,7 +35,6 @@ class User(Base):
     salt: Mapped[str]= mapped_column(String) #WAYNE CODE
     role_id: Mapped[int] = mapped_column(Integer, ForeignKey("role.id"))
     role: Mapped["Role"] = relationship("Role")
-    muted: Mapped[bool] = mapped_column(Boolean, default=False)
 
 class Role(Base):
     __tablename__ = "role"

@@ -227,24 +227,6 @@ def delete_comment(comment_id):
     db.delete_comment(comment_id)
     return jsonify({"success": True})
 
-@app.route("/mute_user/<username>", methods=["POST"])
-def mute_user(username):
-    staff_username = request.cookies.get("username")
-    if not staff_username or not is_staff(staff_username):
-        abort(403)
-
-    db.mute_user(username)
-    return jsonify({"success": True})
-
-@app.route("/unmute_user/<username>", methods=["POST"])
-def unmute_user(username):
-    staff_username = request.cookies.get("username")
-    if not staff_username or not is_staff(staff_username):
-        abort(403)
-
-    db.unmute_user(username)
-    return jsonify({"success": True})
-
 if __name__ == '__main__':
     if not db.get_role_by_name("Student"):
         db.create_role("Student")

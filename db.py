@@ -237,17 +237,3 @@ def assign_role_to_user(username: str, role_id: int):
         if user:
             user.role_id = role_id
             session.commit()
-
-def mute_user(username: str):
-    with Session(engine) as session:
-        user = session.get(User, username)
-        if user:
-            user.muted = True
-            session.commit()
-
-def unmute_user(username: str):
-    with Session(engine) as session:
-        user = session.get(User, username)
-        if user:
-            user.muted = False
-            session.commit()
