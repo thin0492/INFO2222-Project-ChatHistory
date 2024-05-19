@@ -260,6 +260,15 @@
         {% endfor %}
     </ul>
 
+    <h2>Online Friends</h2>
+    <ul id="online_user_list">
+        {% for friend in friends %}
+            {% if friend in online_users %}
+                <li>{{ friend }}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+
     <h2>Friend Requests</h2>
     <ul id="friend_requests">
         {% for request in friend_requests %}
@@ -575,9 +584,44 @@
     socket.on("chat_invitation_sent", () => {
         alert("Chat invitation sent!");
     });
+   
+    socket.on('online', (data) => {
+        const { user_list } = data; 
+        user_list.forEach(lusername => {
+            if (lusername != username){
+                addToOnlineUsersList(lusername);
+            }
+        });
+    });
 
+    socket.on('offline', (data) => {
+        const { username } = data;
+        removeFromOnlineUsersList(username);
+    });  
 
-
+    function addToOnlineUsersList(lusername) {
+        const userList = document.getElementById('online_user_list');
+        const items = userList.getElementsByTagName('li');
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].textContent === lusername) {
+                return;
+            }
+        }
+        const listItem = document.createElement('li');
+        listItem.textContent = lusername;
+        userList.appendChild(listItem);
+    }
+    
+    function removeFromOnlineUsersList(username) {
+        const userList = document.getElementById('online_user_list');
+        const items = userList.getElementsByTagName('li');
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].textContent === username) {
+                items[i].parentNode.removeChild(items[i]);
+                break;
+            }
+        }
+    }
 
 </script>
 {% endblock %}
