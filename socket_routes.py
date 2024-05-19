@@ -22,6 +22,7 @@ import db
 import app
 
 room = Room()
+online_users = {}
 
 # when the client connects to a socket
 # this event is emitted when the io() function is called in JS
@@ -40,15 +41,21 @@ def connect():
     username = request.cookies.get("username")
     if username:
         join_room(username)
+        online_users[username] = request.sid
         
         # Emit events to update the client-side UI with initial data
         friends = db.get_friends(username)
         friend_requests = db.get_friend_requests(username)
         sent_friend_requests = db.get_sent_friend_requests(username)
+        print(f"User {username} connected")
+        print("Online users: ", online_users)  
+        
     
         emit("friends_list", friends, room=username)
         emit("friend_requests_list", [request.sender for request in friend_requests], room=username)
         emit("sent_friend_requests_list", [request.receiver for request in sent_friend_requests], room=username)
+        emit("online", {'user_list': list(online_users.keys())}, broadcast=True)
+
 
         room_id = request.cookies.get("room_id")
         if room_id:
@@ -64,6 +71,20 @@ def disconnect():
     if room_id is None or username is None:
         return
     emit("incoming", (f"{username} has disconnected", "red"), to=int(room_id))
+    
+    
+    
+#event for when user closes browser 
+@socketio.on('logoff')
+def handle_disconnect():
+   for username, sid in online_users.items():
+        if sid == request.sid:
+            print(f"Usern {username} logged off")
+            del online_users[username]
+            print("Online users: ", online_users)    
+            #emit event to inform clients about the online status change 
+            emit("offline", {'username': username},broadcast=True)
+            break
 
 # send message event handler
 #@socketio.on("send")
