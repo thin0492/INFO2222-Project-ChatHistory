@@ -232,4 +232,4 @@ if __name__ == '__main__':
         db.create_role("Student")
     if not db.get_role_by_name("Staff"):
         db.create_role("Staff")
-    socketio.run(app)#, ssl_context=('cert/info.test.crt','cert/info.test.key'))
+    socketio.run(app, host="0.0.0.0", port="80", debug=True, ssl_context=('cert/cert.pem', 'cert/key.pem'))
