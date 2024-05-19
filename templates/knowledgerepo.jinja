@@ -2,65 +2,144 @@
 
 {% block content %}
 <style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f9f9f9;
+        color: #333;
+    }
+
     .home-button {
         position: absolute;
-        top: 10px;
-        right: 10px;
-        padding: 10px;
+        top: 20px;
+        right: 20px;
+        padding: 10px 20px;
         background-color: #007bff;
-        color: #fff;
+        color: white;
         text-decoration: none;
+        border: none;
         border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .home-button:hover {
+        background-color: #0056b3;
+    }
+
+    h1 {
+        text-align: center;
+        color: #333;
+    }
+
+    form {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    input[type="text"], textarea {
+        width: 100%;
+        padding: 8px;
+        margin-top: 6px;
+        margin-bottom: 16px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        box-sizing: border-box; 
+    }
+
+    button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: #45a049;
+    }
+
+    #articles {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    #articles li {
+        background-color: #ffffff;
+        margin-bottom: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .comments {
+        list-style-type: none;
+        padding-left: 20px;
+    }
+
+    .comments li {
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
     }
 </style>
 
 <a href="{{ url_for('home', username=username) }}" class="home-button">Home</a>
 
-<h1>Knowledge Repository</h1>
+<main>
+    <h1>Knowledge Repository</h1>
 
-<h2>Create Article</h2>
-<form id="create_article_form">
-    <input type="text" id="article_title" placeholder="Title" required>
-    <textarea id="article_content" placeholder="Content" required></textarea>
-    <button type="submit">Create Article</button>
-</form>
+    <section>
+        <h2>Create Article</h2>
+        <form id="create_article_form">
+            <input type="text" id="article_title" placeholder="Title" required>
+            <textarea id="article_content" placeholder="Content" required></textarea>
+            <button type="submit">Create Article</button>
+        </form>
+    </section>
 
-<h2>Articles</h2>
-<ul id="articles">
-    {% for article in articles %}
-    <li>
-        <h3>{{ article.title }}</h3>
-        <p>{{ article.content }}</p>
-        <p>Author: {{ article.author }}</p>
-        {% if user.role.name == "Staff" or user.username == article.author %}
-        <button onclick="editArticle({{ article.id }})">Edit</button>
-        {% endif %}
-        {% if user.role.name == "Staff" or user.username == article.author %}
-        <button onclick="deleteArticle({{ article.id }})">Delete</button>
-        {% endif %}
-
-        <h4>Comments</h4>
-        <ul class="comments">
-            {% for comment in article.comments %}
+    <section>
+        <h2>Articles</h2>
+        <ul id="articles">
+            {% for article in articles %}
             <li>
-                <p>{{ comment.content }}</p>
-                <p>Author: {{ comment.author }}</p>
-                {% if user.role.name == "Staff" or user.username == comment.author %}
-                <button onclick="deleteComment({{ comment.id }})">Delete</button>
+                <h3>{{ article.title }}</h3>
+                <p>{{ article.content }}</p>
+                <p>Author: {{ article.author }}</p>
+                {% if user.role.name == "Staff" or user.username == article.author %}
+                <button onclick="editArticle({{ article.id }})">Edit</button>
+                <button onclick="deleteArticle({{ article.id }})">Delete</button>
                 {% endif %}
+
+                <h4>Comments</h4>
+                <ul class="comments">
+                    {% for comment in article.comments %}
+                    <li>
+                        <p>{{ comment.content }}</p>
+                        <p>Author: {{ comment.author }}</p>
+                        {% if user.role.name == "Staff" or user.username == comment.author %}
+                        <button onclick="deleteComment({{ comment.id }})">Delete</button>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <form class="add-comment-form" data-article-id="{{ article.id }}">
+                    <textarea name="comment" placeholder="Add a comment"></textarea>
+                    <button type="submit">Add Comment</button>
+                </form>
             </li>
             {% endfor %}
         </ul>
-
-        <form class="add-comment-form" data-article-id="{{ article.id }}">
-            <textarea name="comment" placeholder="Add a comment"></textarea>
-            <button type="submit">Add Comment</button>
-        </form>
-    </li>
-    {% endfor %}
-</ul>
+    </section>
+</main>
 
 <script src="/static/js/libs/axios.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 <script>
     document.getElementById("create_article_form").addEventListener("submit", async (e) => {
         e.preventDefault();
