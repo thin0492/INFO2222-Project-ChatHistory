@@ -1,0 +1,140 @@
+{% extends 'base.jinja' %}
+
+{% block content %}
+<style>
+    nav {
+        border-bottom: 1px solid black;
+        overflow: auto;
+    }
+
+    #message_box {
+        border: 1px solid black;
+        height: 400px;
+        width: 800px;
+        overflow: auto;
+        padding: 2px;
+    }
+
+    .text {
+        margin-top: 2px;
+        margin-bottom: 2px;
+    }
+</style>
+
+<nav style="border-bottom: 1px solid black;">
+    <ol style="float: right">
+        <li style="display:inline-block">Username: {{ username }}</li>
+    </ol>
+</nav>
+
+<h1>Messaging App</h1>
+
+<main>
+    <section id="message_box"></section>
+
+    <section id="chat_box">
+        <p class="text">Chat with:</p>
+        <select id="receiver">
+            <option value="">Select a friend</option>
+            {% for friend in friends %}
+            <option value="{{ friend }}">{{ friend }}</option>
+            {% endfor %}
+        </select>
+        <button onclick="join_room()">Chat</button>
+    </section>
+
+    <section id="input_box" style="display: none">
+        <p class="text">Message:</p>
+        <input id="message" placeholder="message">
+        <button onclick="send()">Send</button>
+        <button onclick="leave()">Leave Room</button>
+    </section>
+
+    <h2>Friends</h2>
+    <ul id="friends">
+        {% for friend in friends %}
+        <li>{{ friend }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Friend Requests</h2>
+    <ul id="friend_requests">
+        {% for request in friend_requests %}
+        <li>
+            {{ request.sender }}
+            <button onclick="acceptFriendRequest('{{ username }}', '{{ request.sender }}')">Accept</button>
+            <button onclick="rejectFriendRequest('{{ username }}', '{{ request.sender }}')">Reject</button>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Sent Friend Requests</h2>
+    <ul id="sent_friend_requests">
+        {% for request in sent_friend_requests %}
+        <li>
+            {{ request.receiver }}
+            <button onclick="cancelFriendRequest('{{ username }}', '{{ request.receiver }}')">Cancel</button>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Add Friend</h2>
+    <input id="friend_username" placeholder="Friend's Username">
+    <button onclick="addFriend('{{ username }}')">Add Friend</button>
+</main>
+
+<script src="/static/js/libs/socket.io.min.js"></script>
+<script src="/static/js/libs/axios.min.js"></script>
+<script>
+    // ... (existing code)
+
+    function addFriend(username) {
+        let friendUsername = $("#friend_username").val();
+        axios.post("/add_friend", {
+            username: username,
+            friend_username: friendUsername
+        }).then((response) => {
+            alert(response.data);
+            location.reload();
+        }).catch((error) => {
+            alert("Error: " + error.response.data);
+        });
+    }
+
+    function acceptFriendRequest(username, friendUsername) {
+        axios.post("/accept_friend_request", {
+            username: username,
+            friend_username: friendUsername
+        }).then((response) => {
+            alert(response.data);
+            location.reload();
+        }).catch((error) => {
+            alert("Error: " + error.response.data);
+        });
+    }
+
+    function rejectFriendRequest(username, friendUsername) {
+        axios.post("/reject_friend_request", {
+            username: username,
+            friend_username: friendUsername
+        }).then((response) => {
+            alert(response.data);
+            location.reload();
+        }).catch((error) => {
+            alert("Error: " + error.response.data);
+        });
+    }
+
+    function cancelFriendRequest(username, friendUsername) {
+        axios.post("/cancel_friend_request", {
+            username: username,
+            friend_username: friendUsername
+        }).then((response) => {
+            alert(response.data);
+            location.reload();
+        }).catch((error) => {
+            alert("Error: " + error.response.data);
+        });
+    }
+</script>
+{% endblock %}

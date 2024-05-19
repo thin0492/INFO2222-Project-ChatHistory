@@ -1,0 +1,33 @@
+{% extends 'base.jinja' %}
+
+{% block content %}
+<style>
+    .profile-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .profile-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .profile-info {
+        background-color: #f5f5f5;
+        padding: 20px;
+        border-radius: 5px;
+    }
+</style>
+
+<div class="profile-container">
+    <div class="profile-header">
+        <h1>User Profile</h1>
+    </div>
+    <div class="profile-info">
+        <p><strong>Username:</strong> {{ user.username }}</p>
+        <p><strong>Role:</strong> {{ user.role.name }}</p>
+        <!-- Add more user information as needed -->
+    </div>
+</div>
+{% endblock %}

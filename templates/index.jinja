@@ -1,0 +1,53 @@
+<!-- 
+    Index page, the "default" page when you visit "http://localhost/" 
+    without any URL parameters at the end
+    -->
+    
+    {% extends 'base.jinja' %}
+    
+    {% block content %} 
+      <div class="index-page">
+        <h1>Welcome to Our Chatsite!</h1>
+        <div class="button-container">
+          <a href={{ url_for('signup') }} class="button">Sign Up</a>
+          <a href={{ url_for('login') }} class="button">Login</a>
+        </div>
+      </div>
+    
+      <style>
+       body {
+          background-color: #f0f8ff;
+        }
+       .index-page {
+          max-width: 500px;
+          margin: 40px auto;
+          padding: 20px;
+          background-color: #fff;
+          border: 1px solid #ccc;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          text-align: center;
+        }
+        .button-container {
+          display: flex;
+          justify-content: center;
+          margin-top: 30px;
+        }
+        .button {
+          width: 150px;
+          height: 40px;
+          background-color: #007bff;
+          color: #fff;
+          padding: 10px;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          margin-right: 20px;
+          text-align: center;
+          line-height: 40px;
+          text-decoration: none;
+        }
+        .button:hover {
+          background-color: #0069d9;
+        }
+      </style>
+    {% endblock %}

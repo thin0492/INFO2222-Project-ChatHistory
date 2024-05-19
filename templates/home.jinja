@@ -1,0 +1,583 @@
+{% extends 'base.jinja' %}
+
+{% block content %}
+<style>
+    /* Global styles */
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f8ff;
+    }
+
+    .logout-button {
+        color: #007bff;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    /* Navigation bar */
+    nav {
+        background-color: #333;
+        color: #fff;
+        padding: 10px;
+        text-align: right;
+    }
+
+    nav ol {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    nav li {
+        margin-right: 20px;
+    }
+
+    nav a {
+        color: #fff;
+        text-decoration: none;
+    }
+
+    /* Main content */
+    main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+    }
+
+    /* Message box */
+    #message_box {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        padding: 10px;
+        width: 800px;
+        height: 400px;
+        overflow: auto;
+    }
+
+    /* Chat box */
+    #chat_box {
+        margin-top: 20px;
+    }
+
+    #chat_box select {
+        width: 200px;
+        height: 30px;
+        margin-right: 10px;
+    }
+
+    #chat_box button {
+        height: 30px;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    #chat_box button:hover {
+        background-color: #0069d9;
+    }
+
+    /* Input box */
+    #input_box {
+        margin-top: 20px;
+    }
+
+    #input_box input {
+        width: 200px;
+        height: 30px;
+        margin-right: 10px;
+        padding: 10px;
+        border: 1px solid #ccc;
+    }
+
+    #input_box button {
+        height: 30px;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    #input_box button:hover {
+        background-color: #0069d9;
+    }
+
+    /* Friends list */
+    #friends {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    #friends li {
+        margin-bottom: 10px;
+    }
+
+    #friends button {
+        height: 30px;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    #friends button:hover {
+        background-color: #0069d9;
+    }
+
+    /* Friend requests list */
+    #friend_requests {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    #friend_requests li {
+        margin-bottom: 10px;
+    }
+
+    #friend_requests button {
+        height: 30px;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    #friend_requests button:hover {
+        background-color: #0069d9;
+    }
+
+    /* Sent friend requests list */
+    #sent_friend_requests {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    #sent_friend_requests li {
+        margin-bottom: 10px;
+    }
+
+    #sent_friend_requests button {
+        height: 30px;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    #sent_friend_requests button:hover {
+        background-color: #0069d9;
+    }
+
+    .articles-button {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        padding: 10px;
+        background-color: #007bff;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+</style>
+
+<a href="{{ url_for('knowledge_repo') }}" class="articles-button">Articles</a>
+
+<nav>
+    <ol>
+        <li>Username: {{ username }}</li>
+        <li><a href="{{ url_for('profile') }}">Profile</a></li>
+        <li style="float:right;"><a href="{{ url_for('index') }}" class="logout-button">LogOut</a></li>
+    </ol>
+</nav>
+
+<main>
+    <h1>Messaging App</h1>
+
+    <section id="message_box"></section>
+
+    <section id="chat_box">
+        <p class="text">Chat with:</p>
+        <select id="receiver">
+            <option value="">Select a friend</option>
+            {% for friend in friends %}
+            <option value="{{ friend|e }}">{{ friend|e }}</option>
+            {% endfor %}
+        </select>
+        <button onclick="join_room()">Chat</button>
+    </section>
+
+    <section id="input_box" style="display: none">
+        <p class="text">Message:</p>
+        <input id="message" placeholder="message">
+        <button onclick="send()">Send</button>
+        <button onclick="leave()">Leave Room</button>
+    </section>
+
+    <section id="friend_select">
+        <p class="text">Add friend to chat:</p>
+        <select id="friend_dropdown">
+            <option value="">Select a friend</option>
+            {% for friend in friends %}
+            <option value="{{ friend|e }}">{{ friend|e }}</option>
+            {% endfor %}
+        </select>
+        <button onclick="addFriendToChat()">Add Friend</button>
+    </section>
+
+    <h2>Chat Invitations</h2>
+    <ul id="chat_invitations">
+        {% for invitation in chat_invitations %}
+        <li data-invitation-id="{{ invitation.id }}">
+            {{ invitation.sender|e }} invited you to join a chat.
+            <button onclick="acceptChatInvitation({{ invitation.id }})">Accept</button>
+            <button onclick="rejectChatInvitation({{ invitation.id }})">Reject</button>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Friends</h2>
+    <ul id="friends">
+        {% for friend in friends %}
+        <li>
+            <a href="{{ url_for('profile', username=friend) }}">{{ friend|e }}</a>
+            <button onclick="removeFriend('{{ username|e }}', '{{ friend|e }}')">Remove</button>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Friend Requests</h2>
+    <ul id="friend_requests">
+        {% for request in friend_requests %}
+        <li>
+            {{ request.sender|e }}
+            <button onclick="acceptFriendRequest('{{ username|e }}', '{{ request.sender|e }}')">Accept</button>
+            <button onclick="rejectFriendRequest('{{ username|e }}', '{{ request.sender|e }}')">Reject</button>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Sent Friend Requests</h2>
+    <ul id="sent_friend_requests">
+        {% for request in sent_friend_requests %}
+        <li>
+            {{ request.receiver|e }}
+            <button onclick="cancelFriendRequest('{{ username|e }}', '{{ request.receiver|e }}')">Cancel</button>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Add Friend</h2>
+    <input id="friend_username" placeholder="Friend's Username">
+    <button onclick="addFriend('{{ username|e }}')">Add Friend</button>
+</main>
+
+<script src="/static/js/libs/socket.io.min.js"></script>
+<script src="/static/js/libs/axios.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<script>
+    let room_id = 0;
+    let currentReceiver = "";
+
+    $("#message").on("keyup", (e) => {
+        if (e.key == "Enter") {
+            send();
+        }
+    });
+
+    $("#receiver").on("keyup", (e) => {
+        if (e.key == "Enter") {
+            join_room();
+        }
+    });
+
+    $(document).ready(() => {
+        if (Cookies.get("room_id") == undefined) {
+            return;
+        }
+
+        $("#chat_box").hide();
+        $("#input_box").show();
+        room_id = parseInt(Cookies.get("room_id"));
+    });
+
+    let username = "{{ username }}";
+
+    Cookies.set('username', username);
+
+    const socket = io();
+
+    //socket.on("incoming", (msg, color = "black") => {
+    //    add_message(msg, color);
+    //});
+
+    socket.on("incoming", (sender, encryptedMessage, key, mac, color = "black") => {
+        console.log("Received message from:", sender);
+        console.log("Encrypted message:", encryptedMessage);
+        console.log("Key:", key);
+        console.log("MAC:", mac);
+        
+        // Verify the MAC
+        let computedMac = CryptoJS.HmacSHA256(encryptedMessage, CryptoJS.enc.Utf8.parse(key)).toString();
+        if (computedMac !== mac) {
+            console.error("Message authentication failed!");
+            return;
+        }
+        
+        // Decrypt the message using the key
+        let decryptedMessage = CryptoJS.AES.decrypt(encryptedMessage, key).toString(CryptoJS.enc.Utf8);
+        
+        console.log("Decrypted message:", decryptedMessage);
+        
+        add_message(`${sender}: ${decryptedMessage}`, color);
+    });
+
+    socket.on("friends_list", (friends) => {
+        $("#friends").empty();
+        friends.forEach((friend) => {
+            $("#friends").append(`
+                <li>
+                    <a href="/profile?username=${friend}">${friend}</a>
+                    <button onclick="removeFriend('{{ username }}', '${friend}')">Remove</button>
+                </li>
+            `);
+        });
+    });
+
+    socket.on("friend_requests_list", (friendRequests) => {
+        $("#friend_requests").empty();
+        friendRequests.forEach((sender) => {
+            $("#friend_requests").append(`
+                <li>
+                    ${sender}
+                    <button onclick="acceptFriendRequest('{{ username }}', '${sender}')">Accept</button>
+                    <button onclick="rejectFriendRequest('{{ username }}', '${sender}')">Reject</button>
+                </li>
+            `);
+        });
+    });
+
+    socket.on("friend_request_received", (sender) => {
+        $("#friend_requests").append(`
+            <li>
+                ${sender}
+                <button onclick="acceptFriendRequest('{{ username }}', '${sender}')">Accept</button>
+                <button onclick="rejectFriendRequest('{{ username }}', '${sender}')">Reject</button>
+            </li>
+        `);
+    });
+
+    socket.on("friend_added", (friend) => {
+        $("#friends").append(`
+            <li>
+                <a href="/profile?username=${friend}">${friend}</a>
+                <button onclick="removeFriend('{{ username }}', '${friend}')">Remove</button>
+            </li>
+        `);
+        $("#friend_requests li").filter(function() {
+            return $(this).text().trim().startsWith(friend);
+            //return $(this).text().trim() === friend;
+        }).remove();
+    });
+
+    socket.on("friend_request_rejected", (sender) => {
+        $("#friend_requests li").filter(function() {
+            return $(this).text().trim().startsWith(sender);
+        }).remove();
+    });
+
+    socket.on("friend_request_rejected_sender", (receiver) => {
+        $("#sent_friend_requests li").filter(function() {
+            return $(this).text().trim().startsWith(receiver);
+        }).remove();
+    });
+
+    socket.on("friend_removed", (friend) => {
+        $("#friends li").filter(function() {
+            return $(this).text().trim().startsWith(friend);
+        }).remove();
+        $("#receiver option[value='" + friend + "']").remove();
+    });
+
+    socket.on("sent_friend_requests_list", (sentFriendRequests) => {
+        $("#sent_friend_requests").empty();
+        sentFriendRequests.forEach((receiver) => {
+            $("#sent_friend_requests").append(`
+                <li>
+                    ${receiver}
+                    <button onclick="cancelFriendRequest('{{ username }}', '${receiver}')">Cancel</button>
+                </li>
+            `);
+        });
+    });
+
+    socket.on("friends_list_updated", (friends) => {
+        $("#receiver").empty();
+        $("#receiver").append('<option value="">Select a friend</option>');
+        friends.forEach((friend) => {
+            $("#receiver").append(`<option value="${friend}">${friend}</option>`);
+        });
+    });
+    
+    socket.on("friend_request_accepted", (sender, receiver) => {
+        $("#sent_friend_requests li").filter(function() {
+            return $(this).text().trim().startsWith(receiver);
+        }).remove();
+    });
+
+    socket.on("friend_request_cancelled", (sender, receiver) => {
+        $("#sent_friend_requests li").filter(function() {
+            return $(this).text().trim().startsWith(receiver);
+        }).remove();
+    });
+
+    socket.on("friend_request_cancelled_receiver", (sender) => {
+        $("#friend_requests li").filter(function() {
+            return $(this).text().trim().startsWith(sender);
+        }).remove();
+    });
+
+    socket.on("friend_request_sent_success", (receiver) => {
+        $("#sent_friend_requests").append(`
+            <li>
+                ${receiver}
+                <button onclick="cancelFriendRequest('{{ username }}', '${receiver}')">Cancel</button>
+            </li>
+        `);
+    });
+
+    function send() {
+        let message = $("#message").val();
+        $("#message").val("");
+        
+        let receiver = currentReceiver
+
+        // Generate a random key for encryption
+        let key = CryptoJS.lib.WordArray.random(16).toString();
+        
+        // Encrypt the message using the key
+        let encryptedMessage = CryptoJS.AES.encrypt(message, key).toString();
+        
+        // Generate a MAC for the encrypted message
+        let mac = CryptoJS.HmacSHA256(encryptedMessage, CryptoJS.enc.Utf8.parse(key)).toString();
+        console.log("Sending message:", message);
+        console.log("Encrypted message:", encryptedMessage);
+        console.log("Key:", key);
+        console.log("MAC:", mac);
+        
+        // Send the encrypted message, key, and MAC to the server
+        socket.emit("send", username, receiver, encryptedMessage, key, mac, room_id);
+    }
+
+    function join_room() {
+        let receiver = $("#receiver").val();
+        currentReceiver = receiver; 
+        $("#message_box").empty(); //NEW CODE
+        socket.emit("join", username, receiver, (res) => {
+            if (typeof res != "number") {
+                alert(res);
+                return;
+            }
+
+            room_id = res;
+            Cookies.set("room_id", room_id);
+
+            $("#chat_box").hide();
+            $("#input_box").show();
+            
+        });
+    }
+
+    function addFriendToChat() {
+        let selectedFriend = $("#friend_dropdown").val();
+        if (selectedFriend !== "") {
+            socket.emit("add_friend_to_chat", room_id, selectedFriend);
+        }
+    }
+
+    function leave() {
+        Cookies.remove("room_id");
+        socket.emit("leave", username, room_id);
+        $("#input_box").hide();
+        $("#chat_box").show();
+        $("#message_box").empty();
+    }
+
+    function add_message(message, color) {
+        let box = $("#message_box");
+        let child = $(`<p style="color:${color}; margin: 0px;"></p>`).text(message);
+        box.append(child);
+    }
+
+    //function addFriend(username) {
+    //    let friendUsername = $("#friend_username").val();
+    //    socket.emit("friend_request_sent", username, friendUsername);
+    //}
+    function addFriend(username) {
+        let friendUsername = $("#friend_username").val();
+        socket.emit("friend_request_sent", username, friendUsername);
+        $("#friend_username").val("");
+    }
+
+    function acceptFriendRequest(username, friendUsername) {
+        socket.emit("friend_request_accepted", friendUsername, username);
+    }
+
+    function rejectFriendRequest(username, friendUsername) {
+        socket.emit("friend_request_rejected", friendUsername, username);
+    }
+
+    function removeFriend(username, friendUsername) {
+        socket.emit("friend_removed", username, friendUsername);
+    }
+
+    function cancelFriendRequest(username, friendUsername) {
+        socket.emit("friend_request_cancelled", username, friendUsername);
+    }
+
+    function acceptChatInvitation(invitationId) {
+        socket.emit("accept_chat_invitation", invitationId, (response) => {
+            if (response.success) {
+                // Remove the accepted invitation from the list
+                $(`#chat_invitations li[data-invitation-id="${invitationId}"]`).remove();
+                // Join the chat room
+                room_id = response.room_id;
+                Cookies.set("room_id", room_id);
+                $("#chat_box").hide();
+                $("#input_box").show();
+            } else {
+                alert("Failed to accept the chat invitation.");
+            }
+        });
+    }
+
+    function rejectChatInvitation(invitationId) {
+        socket.emit("reject_chat_invitation", invitationId, () => {
+            // Remove the rejected invitation from the list
+            $(`#chat_invitations li[data-invitation-id="${invitationId}"]`).remove();
+        });
+    }
+
+    socket.on("chat_invitation_sent", () => {
+        alert("Chat invitation sent!");
+    });
+
+
+
+
+</script>
+{% endblock %}

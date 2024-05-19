@@ -1,0 +1,126 @@
+{% extends 'base.jinja' %}
+
+{% block content %}
+<style>
+    .home-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 10px;
+        background-color: #007bff;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+</style>
+
+<a href="{{ url_for('home', username=username) }}" class="home-button">Home</a>
+
+<h1>Knowledge Repository</h1>
+
+<h2>Create Article</h2>
+<form id="create_article_form">
+    <input type="text" id="article_title" placeholder="Title" required>
+    <textarea id="article_content" placeholder="Content" required></textarea>
+    <button type="submit">Create Article</button>
+</form>
+
+<h2>Articles</h2>
+<ul id="articles">
+    {% for article in articles %}
+    <li>
+        <h3>{{ article.title }}</h3>
+        <p>{{ article.content }}</p>
+        <p>Author: {{ article.author }}</p>
+        {% if user.role.name == "Staff" or user.username == article.author %}
+        <button onclick="editArticle({{ article.id }})">Edit</button>
+        {% endif %}
+        {% if user.role.name == "Staff" or user.username == article.author %}
+        <button onclick="deleteArticle({{ article.id }})">Delete</button>
+        {% endif %}
+
+        <h4>Comments</h4>
+        <ul class="comments">
+            {% for comment in article.comments %}
+            <li>
+                <p>{{ comment.content }}</p>
+                <p>Author: {{ comment.author }}</p>
+                {% if user.role.name == "Staff" or user.username == comment.author %}
+                <button onclick="deleteComment({{ comment.id }})">Delete</button>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+
+        <form class="add-comment-form" data-article-id="{{ article.id }}">
+            <textarea name="comment" placeholder="Add a comment"></textarea>
+            <button type="submit">Add Comment</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+
+<script src="/static/js/libs/axios.min.js"></script>
+<script>
+    document.getElementById("create_article_form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const title = document.getElementById("article_title").value;
+        const content = document.getElementById("article_content").value;
+        const response = await axios.post("/create_article", { title, content });
+        if (response.data.success) {
+            location.reload();
+        } else {
+            alert("Failed to create article.");
+        }
+    });
+
+    document.querySelectorAll(".add-comment-form").forEach((form) => {
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const articleId = form.dataset.articleId;
+            const commentContent = form.elements.comment.value;
+            const response = await axios.post(`/create_comment/${articleId}`, { content: commentContent });
+            if (response.data.success) {
+                location.reload();
+            } else {
+                alert("Failed to add comment.");
+            }
+        });
+    });
+
+    async function editArticle(articleId) {
+        const title = prompt("Enter new title:");
+        const content = prompt("Enter new content:");
+        const response = await axios.post(`/edit_article/${articleId}`, { title, content });
+        if (response.data.success) {
+            location.reload();
+        } else {
+            alert("Failed to edit article.");
+        }
+    }
+
+    async function deleteArticle(articleId) {
+        const confirmation = confirm("Are you sure you want to delete this article?");
+        if (confirmation) {
+            const response = await axios.post(`/delete_article/${articleId}`);
+            if (response.data.success) {
+                location.reload();
+            } else {
+                alert("Failed to delete article.");
+            }
+        }
+    }
+
+    async function deleteComment(commentId) {
+        const confirmation = confirm("Are you sure you want to delete this comment?");
+        if (confirmation) {
+            const response = await axios.post(`/delete_comment/${commentId}`);
+            if (response.data.success) {
+                location.reload();
+            } else {
+                alert("Failed to delete comment.");
+            }
+        }
+    }
+</script>
+{% endblock %}
